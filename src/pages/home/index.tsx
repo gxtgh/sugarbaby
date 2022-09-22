@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './index.scss';
+const video1 = 'bg_1';
+const video2 = 'bg_2';
+const video3 = 'bg_3';
 
 const tabs =[
   {
     type: 'index',
     color: '',
     title: 'Where People @  Meet for @ Secret Relationships',
-    content:  ``
+    content:  ``,
+    video: video1
   },
   {
     type: 'baby',
@@ -15,14 +19,16 @@ const tabs =[
     content:  `A sugar baby wants something more than a traditional relationship. 
     She's looking for a successful and generous gentleman. 
     She seeks the chance to upgrade her lifestyle. 
-    She's an attractive, goal-oriented woman who knows what she wants.`
+    She's an attractive, goal-oriented woman who knows what she wants.`,
+    video: video2
   },
   {
     type: 'daddy',
     color: '#61B3FF',
     title: 'What is a @ Sugar Daddy?',
     content:  `A sugar daddy is a successful man who knows exactly what he wants from a relationship.
-     He wants to generously share his lifestyle and experience with an attractive companion.`
+     He wants to generously share his lifestyle and experience with an attractive companion.`,
+     video: video3
   },
   {
     type: 'relationshipWithBenefits',
@@ -36,7 +42,8 @@ const tabs =[
     Start your sexy relationship with us. 
     In just a few minutes at SugarBaby, you'll browse profiles of eligible, 
     wealthy men or attractive, beautiful women who are looking for a date.
-     Make all your dreams and wildest fantasies come true - join SugarBaby Now!`
+     Make all your dreams and wildest fantasies come true - join SugarBaby Now!`,
+     video: video2
   },
 ];
 interface tabItemType {
@@ -44,11 +51,16 @@ interface tabItemType {
   color: string;
   title: string;
   content: string;
+  video: any
 }
 function Home() {
-  const [currentTab, setCurrentTab] = useState<tabItemType>(tabs[1]);
+  const [currentTab, setCurrentTab] = useState<tabItemType>(tabs[0]);
   const [order, setOrder] = useState<string>('positive');// negative
 
+  useEffect(() => {
+    pcHandleTab(tabs[0]);
+  },[]);
+  
   const clipTitle = (str:string) => {
     let list = str.split('@') || [];
     return list.map((item,index) => {
@@ -56,24 +68,46 @@ function Home() {
     })
   }
 
+  const pcHandleTab = (item:tabItemType) => {
+    let myVideo:any = document.getElementById('my-'+currentTab.type);
+    myVideo.pause();
+    setCurrentTab(item);
+    let currentVideo:any = document.getElementById('my-'+item.type);
+    setTimeout(() => {
+      currentVideo.currentTime = 0;
+      currentVideo?.play();
+      currentVideo.loop = true;
+    }, 0);
+  }
+
   const mobileClickNext = () => {
     let i = 0;
     tabs.forEach((item,index)=>{
       if(item.type === currentTab.type) i = index;
     });
-    console.log(currentTab.type,i)
-    if(i === tabs.length-1){
-      setCurrentTab(tabs[0]);
+    if(order === 'positive'){
+      pcHandleTab(tabs[i+1]);
+      if(i === 2) setOrder('negative');
     }else {
-      setCurrentTab(tabs[i+1]);
+      pcHandleTab(tabs[i-1]);
+      if(i === 1) setOrder('positive');
     }
   }
 
+
   return (
     <div className="home">
+      <div className='myvideoMask'></div>
+      {
+        tabs.map(item => {
+          return (<video id={'my-'+item.type} className="myvideo"  key={item.type} loop={true} muted style={{display: currentTab.type === item.type?'block':'none'}}>
+          <source src={require(`../../assets/video/${item.video}.mp4`)} type='video/mp4'/>
+        </video>)
+        })
+      }
       <header className="home-header">
         <div className="header-left">
-          <img src={require("../../assets/images/logo.png")} alt="LOGO" className='cursorPointer' onClick={()=> setCurrentTab(tabs[0])}/>
+          <img src={require("../../assets/images/logo.png")} alt="LOGO" className='cursorPointer' onClick={()=>{pcHandleTab(tabs[0])}}/>
         </div>
         <div className="header-right">
           <div className="whitepaper-wrap">
@@ -128,8 +162,8 @@ function Home() {
             </div>
           </div>
         </div>
-        <div className="mobileNext" onClick={mobileClickNext}></div>
-        <div className="content-right">
+        <div className={`mobileNext ${order === 'negative'?'center':''}`} onClick={mobileClickNext}></div>
+        <div className="content-right ">
           <ul className='menu-list'>
             {
               tabs.map((item:tabItemType) => {
@@ -137,7 +171,7 @@ function Home() {
                   className={`menu-item`} 
                   style={{borderColor: currentTab.type === item.type?`${item.color}`:''}}
                   key={item.type} 
-                  onClick={()=>setCurrentTab(item)}>
+                  onClick={()=>pcHandleTab(item)}>
                     <div className='menu-item-box'>
                       <div className="title">
                         {clipTitle(item.title)}
